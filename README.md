@@ -1,66 +1,40 @@
-## Foundry
+import {Test,console} from "forge-std/Test.sol";
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+import {CCIPLocalSimulatorFork} from "@chainlink-local/src/ccip/CCIPLocalSimulatorFork.sol";
 
-Foundry consists of:
+import {RebaseToken} from "../src/RebaseToken.sol";
+import {RebaseTokenPool} from "../src/RebaseTokenPool.sol";
+import {Vault} from "../src/Vault.sol";
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+import {IRebaseToken} from "../src/interfaces/IRebaseToken.sol";
 
-## Documentation
+contract CrossChainTest is Test {
+    address constant owner = makeAddr("owner");
+    uint256 sepoliaFork;
+    uint256 arbSepoliaFork;
 
-https://book.getfoundry.sh/
+    CCIPLocalSimulatorFork ccipLocalSimulatorFork;
 
-## Usage
+    RebaseToken sepoliaToken;
+    RebaseToken arbSepoliaToken;
 
-### Build
+    Vault vault;
 
-```shell
-$ forge build
-```
+    function setUp() public {
+        sepoliaFork = vm.createSelectFork("sepolia");
+        arbSepoliaFork = vm.createFork("arb-seplia");
 
-### Test
+        ccipLocalSimulatorFork = new CCIPLocalSimulatorFork();
+        vm.makePersistent(address(ccipLocalSimulatorFork));
 
-```shell
-$ forge test
-```
+        vm.startPork(owner);
+        sepoliaToken = new RebaseToken();
+        vault = new Vault(IRebaseToken(address(sepoliaToken)));
+        vm.stopPrank();
 
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+        vm.selectFork(arbSepoliaFork);
+        arbSeploliaToken = new RebaseToken();
+        vm.startPrank(owner);
+        vm.stopPrank();
+    }
+}
